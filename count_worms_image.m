@@ -54,7 +54,9 @@ I_sc = mat2gray(I);
 I_comp = imcomplement(I_sc);
 
 %% BG Substract
-background = imopen(I_comp,strel('disk',15));
+% The disk size was originally 15, but this didn't work well with large
+% worm aggregates.
+background = imopen(I_comp,strel('disk', 30));
 I_bsub = I_comp - background;
 
 
