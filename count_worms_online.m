@@ -75,9 +75,7 @@ while true
             uiwait(hFig);
 
             % Acquire image and process it:
-            imwrite(imcomplement(rgb2gray(getsnapshot(vid_obj))),...
-                '_temp.tiff', 'tiff');
-            [worm_size, worm_num] = count_worms_image('_temp.tiff', 150, 450);
+            [worm_size, worm_num] = count_worms_image(imcomplement(rgb2gray(getsnapshot(vid_obj))), 150, 450);
             fprintf('Avg worm size: %.1f; counted %d worms.\n', worm_size, worm_num);
             
             manual_add = input('Worms to add manually (nothing means 0): ');

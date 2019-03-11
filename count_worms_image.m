@@ -12,6 +12,8 @@ function [worm_size, num_worms] = count_worms_image(varargin)
 %           the worm_size.
 %
 %   [WORM_SIZE, NUM_WORMS] = count_worms_images(filename)
+%       Note that 'filename' can also be the raw image data both here and
+%       in the next calls.
 %
 %   [WORM_SIZE, NUM_WORMS] = count_worms_images(filename, minsize, maxsize)
 %       minsize - Regions smaller than min_size will be discarded
@@ -26,28 +28,36 @@ function [worm_size, num_worms] = count_worms_image(varargin)
 
 i_p = inputParser;
 i_p.FunctionName = 'count_worms_image';
-i_p.addOptional('filename','',@ischar);
+i_p.addOptional('filename','');
 i_p.addOptional('minsize',10,@isnumeric); % Regions smaller than this will be discarded
 i_p.addOptional('maxsize',80,@isnumeric); % Regions smaller than this will determine single worm size
 i_p.addOptional('debug',0,@isnumeric);
 i_p.parse(varargin{:});
 
-
-if ( (isfield(i_p.Results,'filename')) && ~strcmp(i_p.Results.filename,''))
-    fullfilename = i_p.Results.filename;
+if (isfield(i_p.Results,'filename') && ~ischar(i_p.Results.filename))
+    % This is the raw data
+    image.info.Filename = '<Raw data>';
+    image.data = i_p.Results.filename;
 else
-    [FileName,PathName,FilterIndex] = uigetfile({'*.jpg;*.tif;*.png;*.gif','All Image Files';...
-        '*.*','All Files' },'Select Image File');
-    fullfilename = [PathName, filesep, FileName];
+    if ( (isfield(i_p.Results,'filename')) && ~strcmp(i_p.Results.filename,''))
+        if (~strcmp(i_p.Results.filename,'') && ischar(i_p.Results.filename))
+            fullfilename = i_p.Results.filename;
+        else
+        end
+    else
+        [FileName,PathName,FilterIndex] = uigetfile({'*.jpg;*.tif;*.png;*.gif','All Image Files';...
+            '*.*','All Files' },'Select Image File');
+        fullfilename = [PathName, filesep, FileName];
+    end
+    
+    % Read in image
+    image.info = imfinfo( fullfilename );
+    image.data = imread(fullfilename);
 end
 
 debug = i_p.Results.debug;
 min_worm_size = i_p.Results.minsize;
 max_worm_size = i_p.Results.maxsize;
-
-% Read in image
-image.info = imfinfo( fullfilename );
-image.data = imread(fullfilename);
 
 I = image.data;
 I_sc = mat2gray(I);
