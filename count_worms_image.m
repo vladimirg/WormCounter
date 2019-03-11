@@ -28,7 +28,7 @@ function [worm_size, num_worms] = count_worms_image(varargin)
 
 i_p = inputParser;
 i_p.FunctionName = 'count_worms_image';
-i_p.addOptional('filename','');
+i_p.addOptional('filename','', @(x) ischar(x) || isnumeric(x));
 i_p.addOptional('minsize',10,@isnumeric); % Regions smaller than this will be discarded
 i_p.addOptional('maxsize',80,@isnumeric); % Regions smaller than this will determine single worm size
 i_p.addOptional('debug',0,@isnumeric);
