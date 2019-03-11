@@ -92,10 +92,6 @@ for i=1:size(but_images,1)
     
     [worm_size, num_worms] = count_worms_image([input_dir filesep but_images(i).name], 'minsize', min_worm_size, 'maxsize', max_worm_size);
     
-    if isnan(num_worms)
-        num_worms = 0;
-    end
-    
     manual_worms = input('How many worms to add manually (nothing means 0)? ');
     if isempty(manual_worms)
         manual_worms = 0;

@@ -145,9 +145,28 @@ single_worms = false(size(worm_mask));
 single_worms(vertcat(wormdata(worm_areas<max_worm_size).PixelIdxList)) = true;
 RGB_label = label2rgb(bwlabel(single_worms,4), @lines, 'k', 'shuffle');
 
-%figure, imshow(single_worms);
-
-num_worms = round(sum(worm_mask(:))/worm_size);
+if isempty(worm_areas)
+    num_worms = 0;
+else
+    if isnan(worm_size)
+        worm_size = max_worm_size;
+        
+        % An important warning, we don't want it suppressed.
+        warn_config = warning();
+        
+        warn_on = warn_config;
+        warn_on.identifier = 'all';
+        warn_on.state = 'on';
+        warning(warn_on);
+        
+        warning('In file %s: worms were detected, but all were above the maximum size threshold. Guessing the worm size to be %d.', ...
+            image.info.Filename, worm_size);
+        
+        warning(warn_config);
+    end
+    
+    num_worms = round(sum(worm_mask(:))/worm_size);
+end
 
 % Debug output
 if (debug)
