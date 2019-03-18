@@ -1,5 +1,6 @@
 %% Setup with preliminary questions
 
+output_file_name = input('Enter the output file name: ', 's');
 plates_per_condition = input('How many plates per condition? ');
 spots_per_plate = input('How many spots per plate? ');
 column_names = cell(1, spots_per_plate);
@@ -89,7 +90,7 @@ while true
 end
 
 % csvwrite/xlswrite can't handle cells in Matlab 2012...
-out_file = fopen('result.csv', 'w');
+out_file = fopen(output_file_name, 'w');
 [rows, cols] = size(result);
 for row_ix = 1:rows
     for col_ix = 1:cols
