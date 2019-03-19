@@ -1,11 +1,20 @@
 %% Setup with preliminary questions
 
-output_file_name = input('Enter the output file name: ', 's');
+output_file_name = input('Enter the output file name including the extension (usually .csv): ', 's');
 plates_per_condition = input('How many plates per condition? ');
 spots_per_plate = input('How many spots per plate? ');
-column_names = cell(1, spots_per_plate);
+spot_names = cell(1, spots_per_plate);
+column_names = cell(1, spots_per_plate*5);
 for spot_ix = 1:spots_per_plate
-    column_names{spot_ix} = input(sprintf('Enter name for column %d: ', spot_ix), 's');
+    spot_name = input(sprintf('Enter name for column %d: ', spot_ix), 's');
+    spot_names{spot_ix} = spot_name;
+    column_names((spot_ix-1)*5+1:spot_ix*5) = {...
+        [spot_name, ' - total worm pixels'], ...
+        [spot_name, ' - worm size'], ...
+        [spot_name, ' - raw worm count'], ...
+        [spot_name, ' - manually added worms'], ...
+        [spot_name, ' - final worm pixels'], ...
+    };
 end
 
 %% Image acquisition setup
@@ -19,7 +28,14 @@ vid_src = getselectedsource(vid_obj);
 set(vid_src, 'Exposure', 0.2);
 
 %% Acquisition loop
-result = horzcat({''}, column_names);
+% We use sequential writing because our setup crashes occasionally and we
+% don't want to lose the work.
+out_file = fopen(output_file_name, 'w');
+
+for i=1:length(column_names)
+    fprintf(out_file, [',', column_names{i}]);
+end
+fprintf(out_file, '\r\n');
 
 while true
     condition = input('Enter the condition name (nothing to quit): ', 's');
@@ -27,14 +43,14 @@ while true
         break;
     end
     
-    for condition_ix = 1:plates_per_condition
-        result(end+1,:) = horzcat({condition}, cell(1, length(column_names)));
-        
+    fprintf(out_file, condition);
+    
+    for condition_ix = 1:plates_per_condition        
         for spot_ix = 1:spots_per_plate
             % Present the GUI to the user:
 
             fprintf('Acquiring data for condition %s, plate %d, spot %s...', ...
-                condition, condition_ix, column_names{spot_ix});
+                condition, condition_ix, spot_names{spot_ix});
 
             % This code was borrowed from
             % https://www.mathworks.com/help/imaq/previewing-data.html#f11-76067
@@ -83,23 +99,17 @@ while true
             if isempty(manual_add)
                 manual_add = 0;
             end
+
+            fprintf(out_file, ',%d,%d,%d,%d,%d', ...
+                worm_size * worm_num, worm_size, worm_num, manual_add, ...
+                worm_size * worm_num + worm_size * manual_add);
             
-            result{end, spot_ix+1} = num2str(worm_num + manual_add);
+            % This should flush the output file stream.
+            drawnow update;
         end
+        
+        fprintf(out_file, '\r\n');
     end
 end
 
-% csvwrite/xlswrite can't handle cells in Matlab 2012...
-out_file = fopen(output_file_name, 'w');
-[rows, cols] = size(result);
-for row_ix = 1:rows
-    for col_ix = 1:cols
-        fprintf(out_file, '%s', result{row_ix, col_ix});
-        
-        if col_ix < cols
-            fprintf(out_file, ',');
-        end
-    end
-    
-    fprintf(out_file, '\r\n');
-end
+fclose(out_file);
